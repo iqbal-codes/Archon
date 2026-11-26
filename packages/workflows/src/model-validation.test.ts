@@ -48,8 +48,8 @@ describe('buildAiProfile — tier defaults', () => {
     }
   });
 
-  test('only claude and codex ship built-in tier defaults', () => {
-    expect(Object.keys(builtInTierDefaults).sort()).toEqual(['claude', 'codex']);
+  test('only claude, codex, and agy-multi ship built-in tier defaults', () => {
+    expect(Object.keys(builtInTierDefaults).sort()).toEqual(['agy-multi', 'claude', 'codex']);
     for (const provider of ['pi', 'opencode', 'copilot']) {
       expect(Object.keys(buildAiProfile(provider).aliases)).toEqual([]);
     }

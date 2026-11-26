@@ -76,7 +76,8 @@ export const installHelp: HelpGroup = {
       command: 'ai',
       subcommand: 'tier',
       spec: 'ai tier unset <tier>',
-      description: 'Unset a tier override (built-ins: claude/codex only) [--scope user|install]',
+      description:
+        'Unset a tier override (built-ins: claude/codex/agy-multi) [--scope user|install]',
     },
     {
       command: 'ai',

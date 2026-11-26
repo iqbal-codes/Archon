@@ -58,40 +58,41 @@ for the background-start admission and observation cutoff rules.
 
 - `claude` — Claude (Anthropic)
 - `codex` — Codex (OpenAI)
+- `agy-multi` — Antigravity (agy-multi)
 - `opencode` — OpenCode (community) *(community provider, [deprecated](/getting-started/ai-assistants/#deprecated-providers))*
 - `pi` — Pi
 - `copilot` — Copilot (GitHub) *(community provider, [deprecated](/getting-started/ai-assistants/#deprecated-providers))*
 
 ## Capabilities
 
-| Capability | `claude` | `codex` | `opencode` | `pi` | `copilot` |
-| --- | --- | --- | --- | --- | --- |
-| Background work observation | reported | reported | unobserved | none | unobserved |
-| Session resume | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Immutable session fork (`context.resume`, cross-run `persist_session` and `context: same`) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Engine message to a stalled session | ✅ | ✅ | ❌ | ❌ | ❌ |
-| MCP servers (`mcp:`) | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Hooks (`hooks:`) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Skills (`skills:`) | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Plugins (`plugins:`) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Inline sub-agents (`agents:`) | ✅ | ❌ | ✅¹ | ❌ | ✅ |
-| Tool restrictions (`allowed_tools`/`denied_tools`) | ✅ | ❌ | ✅ | ✅ | ✅ |
-| Structured output (`output_format`) | **enforced** | **enforced** | **enforced** | best-effort | best-effort |
-| Structured-output correction (Archon asks again on a schema miss) | — | same session | — | fresh session | fresh session |
-| Env injection (`env:`) | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Spend limit (`maxBudgetUsd`) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Cost reporting (`costUsd`) | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Token reporting | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Stop reason reporting | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Turn count reporting | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Resolved model reporting | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Effort control (`effort`) | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Fallback model (`fallbackModel`) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Sandbox (`sandbox`) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Setting sources (`settingSources`) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| In-process native tools | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Container exec (folder-project container backend) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Strict-mode `required` coverage (every key in `properties` MUST appear in `required`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Capability | `claude` | `codex` | `agy-multi` | `opencode` | `pi` | `copilot` |
+| --- | --- | --- | --- | --- | --- | --- |
+| Background work observation | reported | reported | unobserved | unobserved | none | unobserved |
+| Session resume | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Immutable session fork (`context.resume`, cross-run `persist_session` and `context: same`) | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Engine message to a stalled session | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| MCP servers (`mcp:`) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Hooks (`hooks:`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Skills (`skills:`) | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Plugins (`plugins:`) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Inline sub-agents (`agents:`) | ✅ | ❌ | ❌ | ✅¹ | ❌ | ✅ |
+| Tool restrictions (`allowed_tools`/`denied_tools`) | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Structured output (`output_format`) | **enforced** | **enforced** | best-effort | **enforced** | best-effort | best-effort |
+| Structured-output correction (Archon asks again on a schema miss) | — | same session | fresh session | — | fresh session | fresh session |
+| Env injection (`env:`) | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Spend limit (`maxBudgetUsd`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Cost reporting (`costUsd`) | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| Token reporting | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Stop reason reporting | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| Turn count reporting | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Resolved model reporting | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| Effort control (`effort`) | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Fallback model (`fallbackModel`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Sandbox (`sandbox`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Setting sources (`settingSources`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| In-process native tools | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Container exec (folder-project container backend) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Strict-mode `required` coverage (every key in `properties` MUST appear in `required`) | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 ## Caveats
 

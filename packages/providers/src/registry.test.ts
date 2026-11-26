@@ -100,6 +100,7 @@ describe('registry', () => {
     expect(providerRegistry.list().map(provider => provider.id)).toEqual([
       'claude',
       'codex',
+      'agy-multi',
       'custom',
     ]);
     clearRegistry();
@@ -374,7 +375,7 @@ describe('registry', () => {
   describe('getProviderInfoList', () => {
     test('returns API-safe projection without factory', () => {
       const infos = getProviderInfoList();
-      expect(infos.length).toBe(2);
+      expect(infos.length).toBe(3);
       for (const info of infos) {
         expect(info).toHaveProperty('id');
         expect(info).toHaveProperty('displayName');
@@ -552,7 +553,7 @@ test('in-process registration includes maintained and transition providers and t
     getRegisteredProviders()
       .map(provider => provider.id)
       .sort()
-  ).toEqual(['claude', 'codex', 'copilot', 'opencode', 'pi']);
+  ).toEqual(['agy-multi', 'claude', 'codex', 'copilot', 'opencode', 'pi']);
   for (const registration of getRegisteredProviders()) {
     const provider = registration.factory();
     expect(provider.getType()).toBe(registration.id);
@@ -561,5 +562,5 @@ test('in-process registration includes maintained and transition providers and t
     getRegisteredProviders()
       .filter(provider => provider.builtIn)
       .map(provider => provider.id)
-  ).toEqual(['claude', 'codex', 'pi']);
+  ).toEqual(['claude', 'codex', 'agy-multi', 'pi']);
 });

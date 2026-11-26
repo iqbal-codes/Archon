@@ -716,7 +716,7 @@ test('a run needing an unset default fails in preflight before provider executio
       workflow,
       '/project'
     )
-  ).rejects.toThrow('No providers installed. Run: archon provider add <claude|codex|pi>');
+  ).rejects.toThrow('No providers installed. Run: archon provider add <claude|codex|pi|agy-multi>');
   const deprecatedOnly = providerRegistry.list().filter(provider => provider.deprecationNotice);
   expect(deprecatedOnly.map(provider => provider.id).sort()).toEqual(['copilot', 'opencode']);
   await expect(
@@ -725,7 +725,7 @@ test('a run needing an unset default fails in preflight before provider executio
       workflow,
       '/project'
     )
-  ).rejects.toThrow('No providers installed. Run: archon provider add <claude|codex|pi>');
+  ).rejects.toThrow('No providers installed. Run: archon provider add <claude|codex|pi|agy-multi>');
 });
 
 test('an unset default permits deterministic nodes and explicitly selected AI nodes', async () => {

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "kind": "provider",
+  "name": "provider-agy-multi",
+  "description": "Archon maintained agy-multi ACP provider.",
+  "executable": "archon-provider-agy-multi"
+}

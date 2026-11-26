@@ -8,7 +8,9 @@ import { removeTempTree } from '@archon/paths/test-utils';
 import { listPiModels, PiProvider } from '@archon/providers/community/pi';
 import { registerBuiltinProviders } from '@archon/providers/in-process';
 import {
+  collectAgyMultiConfig,
   collectPiConfig,
+  detectAgyMultiExecutablePath,
   detectClaudeExecutablePath,
   PI_BACKENDS,
   PI_DEFAULT_MODELS,
@@ -516,5 +518,53 @@ describe('collectPiConfig', () => {
       apiKeyEnvVar: 'XAI_API_KEY',
       piLogin: false,
     });
+  });
+});
+
+describe('detectAgyMultiExecutablePath and collectAgyMultiConfig', () => {
+  let spies: ReturnType<typeof spyOn>[];
+
+  beforeEach(() => {
+    spies = [];
+  });
+
+  afterEach(() => {
+    for (const spy of spies) spy.mockRestore();
+  });
+
+  it('prefers canonical ~/.local/bin/agy-multi over PATH lookup', () => {
+    spies.push(
+      spyOn(providerAuth, 'probeFileExists').mockImplementation(
+        (p: string) => p.includes('.local/bin/agy-multi') || p.includes('.local\\bin\\agy-multi')
+      )
+    );
+    const whichSpy = spyOn(providerAuth, 'probeWhichAgyMulti').mockReturnValue('/other/agy-multi');
+    spies.push(whichSpy);
+
+    const detected = detectAgyMultiExecutablePath();
+    expect(detected).toBeTruthy();
+    expect(detected).toMatch(/\.local[\\/]bin[\\/]agy-multi/);
+    expect(whichSpy).not.toHaveBeenCalled();
+  });
+
+  it('falls back to which agy-multi when canonical paths miss', () => {
+    spies.push(
+      spyOn(providerAuth, 'probeFileExists').mockImplementation(
+        (p: string) => p === '/custom/bin/agy-multi'
+      )
+    );
+    spies.push(spyOn(providerAuth, 'probeWhichAgyMulti').mockReturnValue('/custom/bin/agy-multi'));
+
+    expect(detectAgyMultiExecutablePath()).toBe('/custom/bin/agy-multi');
+  });
+
+  it('prompts for custom path when agy-multi is not detected', async () => {
+    spies.push(spyOn(providerAuth, 'probeFileExists').mockReturnValue(false));
+    spies.push(spyOn(providerAuth, 'probeWhichAgyMulti').mockReturnValue(null));
+    spies.push(spyOn(prompts, 'note').mockImplementation(() => undefined));
+    spies.push(spyOn(prompts.log, 'warning').mockImplementation(() => undefined));
+    spies.push(spyOn(prompts, 'text').mockResolvedValue('/opt/agy-multi'));
+
+    expect(await collectAgyMultiConfig()).toEqual({ binaryPath: '/opt/agy-multi' });
   });
 });

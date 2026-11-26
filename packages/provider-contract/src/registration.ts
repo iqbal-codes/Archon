@@ -3,7 +3,7 @@ import type { IAgentProvider } from './agent-provider';
 import type { ProviderCapabilities } from './capabilities';
 import type { SkillDiscovery } from './skills';
 
-export const MAINTAINED_PROVIDER_IDS = ['claude', 'codex', 'pi'] as const;
+export const MAINTAINED_PROVIDER_IDS = ['claude', 'codex', 'pi', 'agy-multi'] as const;
 
 export function isMaintainedProvider(id: string): id is (typeof MAINTAINED_PROVIDER_IDS)[number] {
   return MAINTAINED_PROVIDER_IDS.some(provider => provider === id);

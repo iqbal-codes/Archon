@@ -28,6 +28,7 @@ import {
   type SetupOptions,
 } from './setup-shared';
 import {
+  collectAgyMultiConfig,
   collectClaudeAuth,
   collectClaudeBinaryPath,
   collectCodexAuth,
@@ -185,7 +186,12 @@ async function collectDefaultChatModel(provider: string): Promise<string | undef
   if (choice === CUSTOM_MODEL) {
     const typed = await text({
       message: `Model id for ${provider}:`,
-      placeholder: provider === 'codex' ? 'gpt-6.1-sol' : 'claude-sonnet-5-5',
+      placeholder:
+        provider === 'codex'
+          ? 'gpt-6.1-sol'
+          : provider === 'agy-multi'
+            ? 'gemini-4-hydrogen-high'
+            : 'claude-sonnet-5-5',
     });
     if (isCancel(typed)) cancelSetup();
     // clack's text() is typed as string but resolves undefined on an empty
@@ -302,6 +308,7 @@ export async function collectAIConfig(
   const hasClaude = selectedProviders.includes('claude');
   const hasCodex = selectedProviders.includes('codex');
   const hasPi = selectedProviders.includes('pi');
+  const hasAgyMulti = selectedProviders.includes('agy-multi');
 
   let claudeAuthType: 'global' | 'apiKey' | 'oauthToken' | undefined;
   let claudeApiKey: string | undefined;
@@ -312,6 +319,7 @@ export async function collectAIConfig(
   let piApiKey: string | undefined;
   let piApiKeyEnvVar: string | undefined;
   let piLogin: boolean | undefined;
+  let agyMultiBinaryPath: string | undefined;
 
   // Collect Claude auth if selected
   if (hasClaude) {
@@ -334,6 +342,11 @@ export async function collectAIConfig(
     piApiKey = piConfig.apiKey;
     piApiKeyEnvVar = piConfig.apiKeyEnvVar;
     piLogin = piConfig.piLogin;
+  }
+
+  if (hasAgyMulti) {
+    const agyConfig = await collectAgyMultiConfig();
+    agyMultiBinaryPath = agyConfig.binaryPath;
   }
 
   const defaultAssistant = await selectDefaultAssistant(selectedProviders);
@@ -359,6 +372,8 @@ export async function collectAIConfig(
     piApiKey,
     piApiKeyEnvVar,
     piLogin,
+    agyMulti: hasAgyMulti,
+    ...(agyMultiBinaryPath !== undefined ? { agyMultiBinaryPath } : {}),
     defaultAssistant,
     ...(selectedProviders.length > 0 ? { defaultAssistantSelected: true } : {}),
     ...(defaultModel !== undefined ? { defaultModel } : {}),

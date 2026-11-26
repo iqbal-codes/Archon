@@ -248,6 +248,7 @@ async function selectSetupMode(existing: ExistingConfig, force: boolean): Promis
     `Claude: ${existing.hasClaude ? 'Configured' : 'Not configured'}`,
     `Codex: ${existing.hasCodex ? 'Configured' : 'Not configured'}`,
     `Pi: ${existing.hasPi ? 'Configured' : 'Not configured'}`,
+    `agy-multi: ${existing.hasAgyMulti ? 'Configured' : 'Not configured'}`,
     `Platforms: ${platforms.length > 0 ? platforms.join(', ') : 'None'}`,
   ].join('\n');
 
@@ -416,6 +417,9 @@ function configuredProviderNames(ai: SetupConfig['ai']): string[] {
   }
   if (ai.pi) {
     aiConfigured.push(ai.piApiKey ? `Pi (${ai.piApiKeyEnvVar})` : 'Pi');
+  }
+  if (ai.agyMulti) {
+    aiConfigured.push('agy-multi');
   }
 
   return aiConfigured;

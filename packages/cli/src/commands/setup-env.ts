@@ -43,6 +43,7 @@ interface ExistingConfig {
   hasClaude: boolean;
   hasCodex: boolean;
   hasPi: boolean;
+  hasAgyMulti: boolean;
   platforms: SetupConfig['platforms'];
 }
 
@@ -85,6 +86,9 @@ export function checkExistingConfig(envPath: string): ExistingConfig | null {
     // the configured default assistant, so Claude users who share the same key
     // env vars never get a Pi login check.
     hasPi: PI_BACKENDS.some(b => hasEnvValue(content, piBackendEnvVar(b.id))),
+    hasAgyMulti:
+      hasEnvValue(content, 'AGY_MULTI_BIN_PATH') ||
+      env.DEFAULT_AI_ASSISTANT?.trim() === 'agy-multi',
     platforms: {
       github: (githubMode === 'app' || githubMode === 'pat') && githubMode === nonblankGitHubMode,
       telegram: hasEnvValue(content, 'TELEGRAM_BOT_TOKEN'),
@@ -135,6 +139,17 @@ export function generateEnvContent(config: SetupConfig): string {
     lines.push('');
   } else {
     lines.push('# Pi not configured');
+    lines.push('');
+  }
+
+  if (config.ai.agyMulti) {
+    lines.push('# Antigravity (agy-multi) Authentication (uses agy-multi profiles)');
+    if (config.ai.agyMultiBinaryPath) {
+      lines.push(['AGY_MULTI_BIN_PATH', config.ai.agyMultiBinaryPath]);
+    }
+    lines.push('');
+  } else {
+    lines.push('# agy-multi not configured');
     lines.push('');
   }
 

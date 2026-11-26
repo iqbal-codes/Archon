@@ -392,7 +392,7 @@ assert_equals "provider add codex" "$(provider_calls_made)" "--providers wins ov
 output=$(run_provider_install) || fail "non-interactive install failed: $output"
 assert_equals "" "$(provider_calls_made)" "No terminal and no selection installs no provider"
 case "$output" in
-  *"archon provider add <claude|codex|pi>"*) ;;
+  *"archon provider add <claude|codex|pi|agy-multi>"*) ;;
   *) fail "non-interactive install without a selection does not print the provider add command" ;;
 esac
 
@@ -419,7 +419,7 @@ invalid_status=0
 output=$(run_provider_install --providers codex,claud) || invalid_status=$?
 [ "$invalid_status" -ne 0 ] || fail "installer accepted an unknown provider in --providers"
 case "$output" in
-  *"Unknown provider 'claud'. Choose from: claude, codex, pi"*) ;;
+  *"Unknown provider 'claud'. Choose from: claude, codex, pi, agy-multi"*) ;;
   *) fail "unknown --providers id is not named with the valid choices" ;;
 esac
 [ ! -e "$provider_curl_marker" ] || fail "installer downloaded a binary before rejecting --providers"
@@ -507,7 +507,7 @@ EOF
   output=$(run_ps_install) || fail "PowerShell install without a selection failed: $output"
   assert_equals "" "$(ps_calls_made)" "No console and no selection installs no provider"
   case "$output" in
-    *"archon provider add <claude|codex|pi>"*) ;;
+    *"archon provider add <claude|codex|pi|agy-multi>"*) ;;
     *) fail "PowerShell install without a selection does not print the provider add command" ;;
   esac
 
@@ -522,7 +522,7 @@ EOF
       || fail "-NonInteractive install with a console failed: $output"
     assert_equals "" "$(ps_calls_made)" "-NonInteractive with a console installs no provider"
     case "$output" in
-      *"archon provider add <claude|codex|pi>"*) ;;
+      *"archon provider add <claude|codex|pi|agy-multi>"*) ;;
       *) fail "-NonInteractive install with a console does not print the provider add command" ;;
     esac
   else
@@ -533,7 +533,7 @@ EOF
   output=$(run_ps_install -Providers codex,claud) || ps_status=$?
   [ "$ps_status" -ne 0 ] || fail "install.ps1 accepted an unknown provider in -Providers"
   case "$output" in
-    *"Unknown provider 'claud'. Choose from: claude, codex, pi"*) ;;
+    *"Unknown provider 'claud'. Choose from: claude, codex, pi, agy-multi"*) ;;
     *) fail "unknown -Providers id is not named with the valid choices" ;;
   esac
   [ ! -e "$ps_download_marker" ] || fail "install.ps1 downloaded a binary before rejecting -Providers"

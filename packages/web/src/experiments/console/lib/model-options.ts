@@ -46,6 +46,7 @@ export function modelPickerShape(agentId: string): ModelPickerShape {
       return 'select';
     case 'claude':
     case 'codex':
+    case 'agy-multi':
       return 'curated';
     default:
       return 'free';
@@ -94,11 +95,18 @@ export const COPILOT_MODEL_OPTIONS: readonly ModelOption[] = [
   { value: 'claude-sonnet-4.5' },
 ];
 
+export const AGY_MULTI_MODEL_OPTIONS: readonly ModelOption[] = [
+  { value: 'gemini-4-hydrogen-high' },
+  { value: 'gemini-4-hydrogen-medium' },
+  { value: 'gemini-3.8-flash-low' },
+];
+
 /** Curated suggestions for an agent's combobox; empty when none exist. */
 export function curatedOptionsForAgent(agentId: string): readonly ModelOption[] {
   if (agentId === 'claude') return CLAUDE_MODEL_OPTIONS;
   if (agentId === 'codex') return CODEX_MODEL_OPTIONS;
   if (agentId === 'copilot') return COPILOT_MODEL_OPTIONS;
+  if (agentId === 'agy-multi') return AGY_MULTI_MODEL_OPTIONS;
   return [];
 }
 

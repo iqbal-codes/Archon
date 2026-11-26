@@ -170,6 +170,7 @@ describe('setup provider selection', () => {
         'claude',
         'codex',
         'pi',
+        'agy-multi',
       ]);
     } finally {
       prompt.mockRestore();

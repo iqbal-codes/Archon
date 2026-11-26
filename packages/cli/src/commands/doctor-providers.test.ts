@@ -20,7 +20,7 @@ describe('provider diagnostics', () => {
     );
     expect(check.status).toBe('fail');
     expect(check.message).toContain(
-      'No providers installed. Run: archon provider add <claude|codex|pi>'
+      'No providers installed. Run: archon provider add <claude|codex|pi|agy-multi>'
     );
     expect(check.message).toContain('it does not install that CLI.');
     expect(await doctorCommand([async () => check])).toBe(1);
@@ -40,7 +40,7 @@ describe('provider diagnostics', () => {
       label: 'Installed providers',
       status: 'warn',
       message:
-        'No providers installed. Run: archon provider add <claude|codex|pi>\n    ' +
+        'No providers installed. Run: archon provider add <claude|codex|pi|agy-multi>\n    ' +
         'Adding a provider connects Archon to your agent CLI or SDK; it does not install that CLI.',
     });
   });

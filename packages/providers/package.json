@@ -30,6 +30,12 @@
     "./codex/plugin": "./src/codex/plugin.ts",
     "./codex/descriptor": "./src/codex/descriptor.ts",
     "./codex": "./src/codex/index.ts",
+    "./agy-multi/provider": "./src/agy-multi/provider.ts",
+    "./agy-multi/config": "./src/agy-multi/config.ts",
+    "./agy-multi/binary-resolver": "./src/agy-multi/binary-resolver.ts",
+    "./agy-multi/plugin": "./src/agy-multi/plugin.ts",
+    "./agy-multi/descriptor": "./src/agy-multi/descriptor.ts",
+    "./agy-multi": "./src/agy-multi/index.ts",
     "./pi/plugin": "./src/community/pi/plugin.ts",
     "./pi/extension-error-broker": "./src/community/pi/extension-error-broker.ts",
     "./pi/model-ref": "./src/community/pi/model-ref.ts",
@@ -292,6 +298,13 @@
     ],
     [
       "src/claude/mcp-readiness.boundary.test.ts"
+    ],
+    [
+      "src/agy-multi/config.test.ts",
+      "src/agy-multi/binary-resolver.test.ts"
+    ],
+    [
+      "src/agy-multi/provider.test.ts"
     ]
   ]
 }

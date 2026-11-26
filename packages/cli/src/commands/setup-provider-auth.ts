@@ -610,3 +610,109 @@ function setPiModel(doc: Document, model: string): boolean {
   pi.set('model', model);
   return true;
 }
+
+export function probeWhichAgyMulti(): string | null {
+  try {
+    const checkCmd = process.platform === 'win32' ? 'where' : 'which';
+    const resolved = execSync(`${checkCmd} agy-multi`, {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const first = resolved.split(/\r?\n/)[0]?.trim();
+    return first ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function detectAgyMultiExecutablePath(): string | null {
+  const binaryName = process.platform === 'win32' ? 'agy-multi.exe' : 'agy-multi';
+  const candidates =
+    process.platform === 'win32'
+      ? [join(homedir(), '.local', 'bin', binaryName)]
+      : [
+          join(homedir(), '.local', 'bin', binaryName),
+          join('/usr', 'local', 'bin', binaryName),
+          join('/opt', 'homebrew', 'bin', binaryName),
+        ];
+  for (const candidate of candidates) {
+    if (probeFileExists(candidate)) return candidate;
+  }
+  const fromPath = probeWhichAgyMulti();
+  if (fromPath && probeFileExists(fromPath)) return fromPath;
+  return null;
+}
+
+async function probeAgyMultiProfiles(
+  binaryPath: string
+): Promise<{ ok: true; total: number; healthy: number } | { ok: false; reason: string }> {
+  try {
+    const { stdout } = await execFileAsync(binaryPath, ['profile', 'list'], { timeout: 5000 });
+    const lines = String(stdout)
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('#'));
+    const healthy = lines.filter(line => line.split('\t')[2]?.trim() === 'ok').length;
+    return { ok: true, total: lines.length, healthy };
+  } catch (err) {
+    return { ok: false, reason: (err as Error).message };
+  }
+}
+
+/**
+ * Detect `agy-multi` CLI and check its configured profile status.
+ * Returns `{ binaryPath }` when the user opts to write `AGY_MULTI_BIN_PATH`.
+ */
+export async function collectAgyMultiConfig(): Promise<{ binaryPath?: string }> {
+  const detected = detectAgyMultiExecutablePath();
+
+  if (detected) {
+    const probe = await probeClaudeBinarySpawns(detected);
+    const profiles = probe.ok ? await probeAgyMultiProfiles(detected) : undefined;
+    if (profiles?.ok && profiles.total === 0) {
+      note(
+        'agy-multi has no account profiles configured yet.\n\n' +
+          'Run `agy-multi profile add` to log in an account before running workflows.',
+        'agy-multi Profiles'
+      );
+    } else if (profiles?.ok && profiles.healthy === 0) {
+      log.warning(
+        `agy-multi has ${profiles.total} profile(s), 0 healthy. Run \`agy-multi profile sync\` to refresh.`
+      );
+    } else if (profiles?.ok) {
+      log.info(`agy-multi profiles: ${profiles.healthy}/${profiles.total} healthy.`);
+    }
+
+    const suffix = probe.ok ? '(spawns OK)' : `(could not spawn: ${probe.reason})`;
+    const useDetected = await confirm({
+      message: `Found agy-multi at ${detected} ${suffix}. Write this to AGY_MULTI_BIN_PATH?`,
+      initialValue: true,
+    });
+    if (isCancel(useDetected)) cancelSetup();
+    if (useDetected) return { binaryPath: detected };
+    return {};
+  }
+
+  note(
+    'agy-multi CLI was not found in ~/.local/bin or PATH.\n' +
+      'Make sure `agy-multi` is installed and at least one profile is added (`agy-multi profile add`).\n' +
+      'You can set AGY_MULTI_BIN_PATH in ~/.archon/.env if it lives at a custom path.',
+    'agy-multi binary path'
+  );
+
+  const customPath = await text({
+    message: 'Absolute path to the agy-multi executable (leave blank to rely on PATH):',
+    placeholder:
+      process.platform === 'win32'
+        ? '%USERPROFILE%\\.local\\bin\\agy-multi.exe'
+        : '~/.local/bin/agy-multi',
+  });
+  if (isCancel(customPath)) cancelSetup();
+
+  const trimmed = (customPath ?? '').trim();
+  if (!trimmed) return {};
+  if (!existsSync(trimmed)) {
+    log.warning(`Path does not exist: ${trimmed}. Saving anyway.`);
+  }
+  return { binaryPath: trimmed };
+}

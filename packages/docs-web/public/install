@@ -6,7 +6,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/coleam00/Archon/main/scripts/install.sh | bash
 #
 # Options:
-#   --providers <ids> - Comma-separated providers to add (claude, codex, pi).
+#   --providers <ids> - Comma-separated providers to add (claude, codex, pi, agy-multi).
 #                       An empty value installs none. Without it, the installer asks.
 #                       Releases up to 0.11.1 bundle their providers and have no
 #                       `archon provider`; pin one with `--providers=`.
@@ -43,7 +43,7 @@ VERSION="${VERSION:-latest}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 # Must match MAINTAINED_PROVIDER_IDS in packages/provider-contract/src/registration.ts;
 # scripts/test-install.sh enforces it.
-PROVIDER_IDS="claude codex pi"
+PROVIDER_IDS="claude codex pi agy-multi"
 
 # Colors
 RED='\033[0;31m'

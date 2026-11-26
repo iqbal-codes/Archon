@@ -1,10 +1,11 @@
 import type { ProviderDiagnostics } from '@archon/provider-contract';
 import { createLogger } from '@archon/paths';
+import { AgyMultiProvider } from '../agy-multi/provider';
 import { ClaudeProvider } from '../claude/provider';
 import { CodexProvider } from '../codex/provider';
 import { PiProvider } from '../community/pi/provider';
 
-for (const providerClass of [ClaudeProvider, CodexProvider, PiProvider]) {
+for (const providerClass of [ClaudeProvider, CodexProvider, PiProvider, AgyMultiProvider]) {
   providerClass.prototype.diagnose = async (): Promise<ProviderDiagnostics> => {
     createLogger(`provider.${providerClass.name}`).error(
       {

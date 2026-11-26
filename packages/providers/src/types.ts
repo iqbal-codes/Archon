@@ -36,6 +36,7 @@ export {
 // ─── Provider Config Defaults ──────────────────────────────────────────────
 // Each type is derived from its provider's config schema, which owns the shape.
 // @archon/core/config/config-types.ts imports them from here.
+export type { AgyMultiProviderDefaults } from './agy-multi/config';
 export type { ClaudeProviderDefaults } from './claude/config';
 export type { CodexProviderDefaults } from './codex/config';
 export type { CopilotProviderDefaults } from './community/copilot/config';

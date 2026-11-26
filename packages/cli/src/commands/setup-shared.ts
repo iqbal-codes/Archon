@@ -31,6 +31,9 @@ export interface SetupConfig {
     piApiKeyEnvVar?: string;
     /** True when the user chose Pi's own login (`pi /login`) over a key */
     piLogin?: boolean;
+    agyMulti?: boolean;
+    /** Absolute path to the agy-multi executable. Written as AGY_MULTI_BIN_PATH in .env when set. */
+    agyMultiBinaryPath?: string;
     defaultAssistant: string | undefined;
     /** Gates the config.yaml write so an empty selection preserves the saved default. */
     defaultAssistantSelected?: boolean;

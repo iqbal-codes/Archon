@@ -8,5 +8,10 @@
     "small": { "model": "gpt-6-luna" },
     "medium": { "model": "gpt-6.1-terra" },
     "large": { "model": "gpt-6.1-sol" }
+  },
+  "agy-multi": {
+    "small": { "model": "gemini-3.8-flash-low" },
+    "medium": { "model": "gemini-4-hydrogen-medium" },
+    "large": { "model": "gemini-4-hydrogen-high" }
   }
 }

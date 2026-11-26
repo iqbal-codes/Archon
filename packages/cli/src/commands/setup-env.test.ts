@@ -108,9 +108,40 @@ ARCHON_CODEX_ACCOUNT_ID=account1
       expect(result?.hasClaude).toBe(false);
       expect(result?.hasCodex).toBe(false);
     });
+
+    it('detects existing agy-multi configuration from AGY_MULTI_BIN_PATH or DEFAULT_AI_ASSISTANT', () => {
+      const envDir = join(TEST_DIR, '.archon-agy-multi');
+      mkdirSync(envDir, { recursive: true });
+      const envPath = join(envDir, '.env');
+
+      writeFileSync(envPath, 'DEFAULT_AI_ASSISTANT=agy-multi\n');
+      expect(checkExistingConfig(envPath)?.hasAgyMulti).toBe(true);
+
+      writeFileSync(envPath, 'AGY_MULTI_BIN_PATH=/usr/local/bin/agy-multi\n');
+      expect(checkExistingConfig(envPath)?.hasAgyMulti).toBe(true);
+    });
   });
 
   describe('generateEnvContent', () => {
+    it('writes AGY_MULTI_BIN_PATH and DEFAULT_AI_ASSISTANT when agy-multi is configured', () => {
+      const env = parseDotenv(
+        generateEnvContent({
+          ai: {
+            claude: false,
+            codex: false,
+            pi: false,
+            agyMulti: true,
+            agyMultiBinaryPath: '/home/user/.local/bin/agy-multi',
+            defaultAssistant: 'agy-multi',
+          },
+          platforms: { github: false, telegram: false, slack: false },
+          botDisplayName: 'Archon',
+        })
+      );
+      expect(env.AGY_MULTI_BIN_PATH).toBe('/home/user/.local/bin/agy-multi');
+      expect(env.DEFAULT_AI_ASSISTANT).toBe('agy-multi');
+    });
+
     it('does not write a default when no assistant was selected', () => {
       const content = generateEnvContent({
         ai: { claude: false, codex: false, pi: false, defaultAssistant: undefined },

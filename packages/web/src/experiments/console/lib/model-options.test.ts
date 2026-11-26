@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import {
+  AGY_MULTI_MODEL_OPTIONS,
   CLAUDE_MODEL_OPTIONS,
   CODEX_MODEL_OPTIONS,
   COPILOT_MODEL_OPTIONS,
@@ -61,6 +62,7 @@ describe('modelPickerShape', () => {
     expect(modelPickerShape('copilot')).toBe('select');
     expect(modelPickerShape('claude')).toBe('curated');
     expect(modelPickerShape('codex')).toBe('curated');
+    expect(modelPickerShape('agy-multi')).toBe('curated');
   });
 
   test('unknown agents (and the unset row sentinel) fall back to free text', () => {
@@ -70,10 +72,11 @@ describe('modelPickerShape', () => {
 });
 
 describe('curatedOptionsForAgent', () => {
-  test('claude/codex/copilot get their curated lists; others get none', () => {
+  test('claude/codex/copilot/agy-multi get their curated lists; others get none', () => {
     expect(curatedOptionsForAgent('claude')).toBe(CLAUDE_MODEL_OPTIONS);
     expect(curatedOptionsForAgent('codex')).toBe(CODEX_MODEL_OPTIONS);
     expect(curatedOptionsForAgent('copilot')).toBe(COPILOT_MODEL_OPTIONS);
+    expect(curatedOptionsForAgent('agy-multi')).toBe(AGY_MULTI_MODEL_OPTIONS);
     expect(curatedOptionsForAgent('pi')).toEqual([]);
     expect(curatedOptionsForAgent('')).toEqual([]);
   });

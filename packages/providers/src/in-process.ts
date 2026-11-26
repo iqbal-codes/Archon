@@ -1,6 +1,11 @@
 import { singleVendorCatalog } from './credential-catalog';
+import {
+  createProvider as createAgyMultiProvider,
+  descriptor as agyMultiDescriptor,
+} from './agy-multi';
 import { createProvider as createClaudeProvider, descriptor as claudeDescriptor } from './claude';
 import { createProvider as createCodexProvider, descriptor as codexDescriptor } from './codex';
+import { parseAgyMultiConfigStrict } from './agy-multi/config';
 import { parseClaudeConfigStrict } from './claude/config';
 import { parseCodexConfigStrict } from './codex/config';
 import { registerCopilotProvider } from './community/copilot/registration';
@@ -33,6 +38,15 @@ export function registerBuiltinProviders(): void {
       parseConfig: parseCodexConfigStrict,
       credentials: singleVendorCatalog(codexDescriptor.credentials.specs[0]),
     },
+    {
+      id: agyMultiDescriptor.id,
+      displayName: agyMultiDescriptor.displayName,
+      factory: createAgyMultiProvider,
+      capabilities: agyMultiDescriptor.capabilities,
+      builtIn: true,
+      parseConfig: parseAgyMultiConfigStrict,
+      credentials: { kind: 'static', specs: [], vendorFor: () => undefined },
+    },
   ];
 
   for (const entry of builtins) {
@@ -60,4 +74,5 @@ export { claimPiExtensionProcessError, listPiModels } from './community/pi';
 export { registerProvider } from './registry';
 export { ClaudeProvider } from './claude/provider';
 export { CodexProvider } from './codex/provider';
+export { AgyMultiProvider } from './agy-multi/provider';
 export { PiProvider } from './community/pi/provider';

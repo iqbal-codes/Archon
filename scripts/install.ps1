@@ -4,7 +4,7 @@
 # Usage: irm https://archon.diy/install.ps1 | iex
 #
 # Options:
-#   -Providers <ids> - Comma-separated providers to add (claude, codex, pi).
+#   -Providers <ids> - Comma-separated providers to add (claude, codex, pi, agy-multi).
 #                      An empty value installs none. Without it, the installer asks.
 #                      Releases up to 0.11.1 bundle their providers and have no
 #                      `archon provider`; pin one with -Providers ''.
@@ -44,7 +44,7 @@ $INSTALL_DIR  = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:USERPROF
 $SKIP_CHECKSUM = ($env:SKIP_CHECKSUM -eq "true")
 # Must match MAINTAINED_PROVIDER_IDS in packages/provider-contract/src/registration.ts;
 # scripts/test-install.sh enforces it.
-$PROVIDER_IDS = @('claude', 'codex', 'pi')
+$PROVIDER_IDS = @('claude', 'codex', 'pi', 'agy-multi')
 # An explicit empty -Providers or ARCHON_PROVIDERS installs none; only an absent one asks.
 # Under `irm | iex` the script runs in the caller's scope, where PSBoundParameters is unset.
 $boundParameters = Get-Variable -Name PSBoundParameters -ValueOnly -ErrorAction SilentlyContinue

@@ -9,9 +9,11 @@ import { z } from 'zod';
 import { trackTempRoots } from '@archon/paths/test-utils';
 import { type ProviderLog, connectProvider } from '@archon/provider-contract/plugin';
 import type { ProviderConfigParser } from '@archon/provider-contract';
+import { descriptor as agyMulti } from './agy-multi/descriptor';
 import { descriptor as claude } from './claude/descriptor';
 import { descriptor as codex } from './codex/descriptor';
 import { descriptor as pi } from './community/pi/descriptor';
+import { parseAgyMultiConfigStrict } from './agy-multi/config';
 import { parseClaudeConfigStrict } from './claude/config';
 import { parseCodexConfigStrict } from './codex/config';
 import { parsePiConfigStrict } from './community/pi/config';
@@ -58,6 +60,18 @@ const providers = [
       { nodes: { plan: { unknown: true } } },
       { extensionFlags: { plan: 1 } },
     ],
+  },
+  {
+    descriptor: agyMulti,
+    path: 'agy-multi',
+    parse: parseAgyMultiConfigStrict,
+    valid: {
+      model: 'gemini-4-hydrogen-high',
+      effort: 'high',
+      agyMultiBinaryPath: '/binary',
+      clean: false,
+    },
+    invalid: [{ effort: 'bad' }, { agyMultiBinaryPath: '' }, { compactionThreshold: -1 }],
   },
 ];
 
@@ -158,7 +172,15 @@ for (const { descriptor, path, parse, valid, invalid } of providers) {
           level: 'error',
           msg: 'query_error',
           bindings: {
-            module: `provider.${descriptor.id === 'pi' ? 'Pi' : descriptor.id === 'claude' ? 'Claude' : 'Codex'}Provider`,
+            module: `provider.${
+              descriptor.id === 'pi'
+                ? 'Pi'
+                : descriptor.id === 'claude'
+                  ? 'Claude'
+                  : descriptor.id === 'agy-multi'
+                    ? 'AgyMulti'
+                    : 'Codex'
+            }Provider`,
             count: 2,
             resultReported: false,
             failureClass: 'auth',

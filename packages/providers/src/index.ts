@@ -52,6 +52,7 @@ export { descriptor as claudeDescriptor } from './claude/descriptor';
 export { descriptor as codexDescriptor } from './codex/descriptor';
 export { descriptor as piDescriptor } from './community/pi/descriptor';
 export type {
+  AgyMultiProviderDefaults,
   ClaudeProviderDefaults,
   CodexProviderDefaults,
   PiProviderDefaults,

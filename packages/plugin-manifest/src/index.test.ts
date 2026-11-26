@@ -360,7 +360,7 @@ describe('chat manifests and receipts', () => {
   });
 });
 
-test.each(['claude', 'codex', 'pi'] as const)(
+test.each(['claude', 'codex', 'pi', 'agy-multi'] as const)(
   'maintained %s install refs and receipt identity share one resolver',
   id => {
     const pluginId = maintainedProviderPluginId(id);

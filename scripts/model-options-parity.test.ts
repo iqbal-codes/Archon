@@ -6,7 +6,7 @@ import tierDefaults from '../packages/workflows/src/defaults/tier-defaults.json'
 // Package boundaries keep these declarations local. Compare ordered model IDs;
 // hints belong to each surface's presentation.
 describe('setup and console model suggestions agree', () => {
-  for (const provider of ['claude', 'codex']) {
+  for (const provider of ['claude', 'codex', 'agy-multi']) {
     test(provider, () => {
       expect(DEFAULT_CHAT_MODEL_OPTIONS[provider].map(option => option.value)).toEqual(
         curatedOptionsForAgent(provider).map(option => option.value)
@@ -18,7 +18,7 @@ describe('setup and console model suggestions agree', () => {
 // The pickers suggest the built-in tier models. Sets, because the pickers order
 // large, medium, small.
 describe('setup suggestions name the built-in tier models', () => {
-  for (const provider of ['claude', 'codex'] as const) {
+  for (const provider of ['claude', 'codex', 'agy-multi'] as const) {
     test(provider, () => {
       const tierModels = Object.values(tierDefaults[provider]).map(tier => tier.model);
       expect(new Set(DEFAULT_CHAT_MODEL_OPTIONS[provider].map(option => option.value))).toEqual(
