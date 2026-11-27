@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { EventEmitter } from 'node:events';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { tmpdir } from 'node:os';
@@ -304,6 +304,7 @@ describe('AgyMultiProvider', () => {
     );
 
     expect(recordedArgs[0]).not.toContain('--sequential');
+    expect(recordedArgs[0]).toContain('--clean');
     expect(recordedArgs[0]).toContain('--dangerously-skip-permissions');
     expect(recordedArgs[0]).toContain('--include-default-customizations=false');
 
@@ -388,5 +389,92 @@ describe('AgyMultiProvider', () => {
       if (originalEnv === undefined) delete process.env.AGY_MULTI_BIN_PATH;
       else process.env.AGY_MULTI_BIN_PATH = originalEnv;
     }
+  });
+
+  test('maps nodeConfig.mcp and nodeConfig.skills into ACP session/new with warnings for missing entries', async () => {
+    const recordedArgs: string[][] = [];
+    const requests: { method: string; params?: Record<string, unknown> }[] = [];
+    const provider = new AgyMultiProvider(createFakeSpawner(recordedArgs, requests));
+
+    const skillDir = join(root, '.agents', 'skills', 'code-check');
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(join(skillDir, 'SKILL.md'), '---\nname: code-check\n---\nCheck code.');
+
+    const mcpPath = join(root, '.archon', 'mcp.json');
+    mkdirSync(join(root, '.archon'), { recursive: true });
+    writeFileSync(
+      mcpPath,
+      JSON.stringify({
+        mcpServers: {
+          localTool: { command: 'node', args: ['tool.js'], env: { API_TOKEN: '${MY_API_TOKEN}' } },
+          remoteHttp: {
+            url: 'https://mcp.example.com/mcp',
+            headers: { Authorization: 'Bearer ${MISSING_TOKEN}' },
+          },
+        },
+      })
+    );
+
+    const chunks = await Array.fromAsync(
+      provider.sendQuery('run checks', root, undefined, {
+        appendSystemPrompt: 'Stay focused.',
+        env: { MY_API_TOKEN: 'secret-123' },
+        nodeConfig: {
+          nodeId: 'review',
+          mcp: '.archon/mcp.json',
+          skills: ['code-check', 'nonexistent-skill'],
+        },
+        assistantConfig: { agyMultiBinaryPath: fakeBinary },
+      })
+    );
+
+    const newSession = requests.find(r => r.method === 'session/new');
+    expect(newSession?.params?.mcpServers).toEqual([
+      {
+        name: 'localTool',
+        command: 'node',
+        args: ['tool.js'],
+        env: [{ name: 'API_TOKEN', value: 'secret-123' }],
+      },
+      {
+        type: 'http',
+        name: 'remoteHttp',
+        url: 'https://mcp.example.com/mcp',
+        headers: [{ name: 'Authorization', value: 'Bearer ' }],
+      },
+    ]);
+    expect(newSession?.params?._meta).toEqual({
+      antigravity: {
+        systemPrompt: { append: 'Stay focused.' },
+        skills: [skillDir],
+      },
+    });
+
+    const warnings = chunks.filter(c => c.type === 'warning');
+    expect(warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'agy_multi.mcp_env_vars_missing' }),
+        expect.objectContaining({ code: 'agy_multi.skills_missing' }),
+      ])
+    );
+    expect(chunks.find(c => c.type === 'result')).toMatchObject({
+      type: 'result',
+      sessionId: 'sess-1',
+    });
+  });
+
+  test('fails as misconfigured when nodeConfig.mcp references a missing file', async () => {
+    const provider = new AgyMultiProvider(createFakeSpawner());
+    const chunks = await Array.fromAsync(
+      provider.sendQuery('hello', root, undefined, {
+        nodeConfig: { nodeId: 'step', mcp: 'missing.mcp.json' },
+        assistantConfig: { agyMultiBinaryPath: fakeBinary },
+      })
+    );
+    expect(chunks.find(c => c.type === 'result')).toMatchObject({
+      type: 'result',
+      isError: true,
+      failure: { class: 'misconfigured' },
+    });
   });
 });

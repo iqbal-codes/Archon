@@ -71,9 +71,9 @@ for the background-start admission and observation cutoff rules.
 | Session resume | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Immutable session fork (`context.resume`, cross-run `persist_session` and `context: same`) | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
 | Engine message to a stalled session | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| MCP servers (`mcp:`) | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| MCP servers (`mcp:`) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Hooks (`hooks:`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Skills (`skills:`) | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Skills (`skills:`) | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
 | Plugins (`plugins:`) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Inline sub-agents (`agents:`) | ✅ | ❌ | ❌ | ✅¹ | ❌ | ✅ |
 | Tool restrictions (`allowed_tools`/`denied_tools`) | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |

@@ -18,7 +18,16 @@ import {
   type ProviderStopReason,
 } from '@archon/provider-contract';
 import { createLogger } from '@archon/paths';
-import type { MessageChunk, ResultChunk, SendQueryOptions, TokenUsage } from '../types';
+import { resolveSkillDirectories } from '@archon/paths/skills';
+import type {
+  MessageChunk,
+  ProviderWarning,
+  ResultChunk,
+  SendQueryOptions,
+  TokenUsage,
+} from '../types';
+import { loadMcpConfig } from '../mcp/config';
+import { ClassifiedProviderError } from '../shared/failure';
 import { augmentPromptForJsonSchema, tryParseStructuredOutput } from '../shared/structured-output';
 import { resumedOutcome, withResumedOutcome } from '../shared/resumed';
 import { AcpJsonRpcError, AgyMultiAcpClient, type AcpNotification } from './acp-client';
@@ -191,6 +200,139 @@ function resolveThoughtLevel(
   return allowed.includes('medium') ? 'medium' : allowed[0];
 }
 
+type AcpNameValuePair = { name: string; value: string };
+
+type AcpMcpServer =
+  | { name: string; command: string; args: string[]; env: AcpNameValuePair[] }
+  | { type: 'http' | 'sse'; name: string; url: string; headers: AcpNameValuePair[] };
+
+function toNameValuePairs(raw: unknown, serverName: string, field: string): AcpNameValuePair[] {
+  if (raw === undefined) return [];
+  if (Array.isArray(raw)) {
+    return raw.map(entry => {
+      if (
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof (entry as { name?: unknown }).name === 'string' &&
+        typeof (entry as { value?: unknown }).value === 'string'
+      ) {
+        return {
+          name: (entry as { name: string }).name,
+          value: (entry as { value: string }).value,
+        };
+      }
+      throw new ClassifiedProviderError(
+        'misconfigured',
+        `MCP server "${serverName}".${field} array entries must have string "name" and "value"`
+      );
+    });
+  }
+  if (typeof raw === 'object' && raw !== null) {
+    return Object.entries(raw as Record<string, unknown>).map(([name, value]) => {
+      if (typeof value !== 'string') {
+        throw new ClassifiedProviderError(
+          'misconfigured',
+          `MCP server "${serverName}".${field}.${name} must be a string`
+        );
+      }
+      return { name, value };
+    });
+  }
+  throw new ClassifiedProviderError(
+    'misconfigured',
+    `MCP server "${serverName}".${field} must be an object or array of {name, value}`
+  );
+}
+
+function toAcpMcpServers(servers: Record<string, unknown>): AcpMcpServer[] {
+  const result: AcpMcpServer[] = [];
+  for (const [name, raw] of Object.entries(servers)) {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      throw new ClassifiedProviderError(
+        'misconfigured',
+        `MCP server "${name}" must be a JSON object`
+      );
+    }
+    const config = raw as Record<string, unknown>;
+    if (typeof config.command === 'string' && config.command.length > 0) {
+      const args = Array.isArray(config.args)
+        ? config.args.filter((arg): arg is string => typeof arg === 'string')
+        : [];
+      result.push({
+        name,
+        command: config.command,
+        args,
+        env: toNameValuePairs(config.env, name, 'env'),
+      });
+      continue;
+    }
+    const url =
+      typeof config.url === 'string' && config.url.length > 0
+        ? config.url
+        : typeof config.serverUrl === 'string' && config.serverUrl.length > 0
+          ? config.serverUrl
+          : undefined;
+    if (url) {
+      const type = config.type === 'sse' ? 'sse' : 'http';
+      result.push({
+        type,
+        name,
+        url,
+        headers: toNameValuePairs(config.headers, name, 'headers'),
+      });
+      continue;
+    }
+    throw new ClassifiedProviderError(
+      'misconfigured',
+      `MCP server "${name}" must specify either "command" (stdio) or "url" (http/sse)`
+    );
+  }
+  return result;
+}
+
+async function resolveNodeMcpServers(
+  cwd: string,
+  requestOptions?: SendQueryOptions
+): Promise<{ mcpServers: AcpMcpServer[]; warnings: ProviderWarning[] }> {
+  const mcpPath = requestOptions?.nodeConfig?.mcp;
+  if (typeof mcpPath !== 'string' || mcpPath.length === 0) {
+    return { mcpServers: [], warnings: [] };
+  }
+  const envSource = requestOptions?.env ? { ...process.env, ...requestOptions.env } : process.env;
+  const { servers, serverNames, missingVars } = await loadMcpConfig(mcpPath, cwd, envSource);
+  const warnings: ProviderWarning[] = [];
+  if (missingVars.length > 0) {
+    const uniqueVars = [...new Set(missingVars)];
+    warnings.push({
+      code: 'agy_multi.mcp_env_vars_missing',
+      message: `agy-multi MCP config references undefined env vars: ${uniqueVars.join(', ')}. Servers using them may fail at runtime.`,
+    });
+  }
+  const mcpServers = toAcpMcpServers(servers);
+  getLog().info({ serverNames, missingVars }, 'agy_multi.mcp_loaded');
+  return { mcpServers, warnings };
+}
+
+function resolveNodeSkills(
+  cwd: string,
+  requestOptions?: SendQueryOptions
+): { skillPaths: string[]; warnings: ProviderWarning[] } {
+  const declared = requestOptions?.nodeConfig?.skills;
+  if (!declared || declared.length === 0) {
+    return { skillPaths: [], warnings: [] };
+  }
+  const { paths, missing } = resolveSkillDirectories(cwd, declared);
+  const warnings: ProviderWarning[] = [];
+  if (missing.length > 0) {
+    warnings.push({
+      code: 'agy_multi.skills_missing',
+      message: `agy-multi ignored missing skills: ${missing.join(', ')}. Expected a directory with SKILL.md under .agents/skills/ or .claude/skills/ (project or home).`,
+    });
+  }
+  getLog().info({ resolved: paths.length, missing }, 'agy_multi.skills_resolved');
+  return { skillPaths: paths, warnings };
+}
+
 export function buildAgyMultiAcpArgs(
   config: AgyMultiProviderDefaults,
   requestOptions?: SendQueryOptions
@@ -203,6 +345,7 @@ export function buildAgyMultiAcpArgs(
 
   return [
     'acp',
+    ...(disableCustomizations ? ['--clean'] : []),
     ...(config.compactionThreshold !== undefined
       ? ['--compaction-threshold', String(config.compactionThreshold)]
       : []),
@@ -231,6 +374,12 @@ export async function* streamAgyMultiTurn(
   requestOptions?: SendQueryOptions
 ): AsyncGenerator<MessageChunk> {
   const abortSignal = requestOptions?.abortSignal;
+  const { mcpServers, warnings: mcpWarnings } = await resolveNodeMcpServers(cwd, requestOptions);
+  const { skillPaths, warnings: skillWarnings } = resolveNodeSkills(cwd, requestOptions);
+  for (const warning of [...mcpWarnings, ...skillWarnings]) {
+    yield { type: 'warning', ...warning };
+  }
+
   await client.request(
     'initialize',
     {
@@ -262,7 +411,11 @@ export async function* streamAgyMultiTurn(
     try {
       const raw = await client.request(
         'session/resume',
-        { sessionId: resumeSessionId, cwd },
+        {
+          sessionId: resumeSessionId,
+          cwd,
+          ...(mcpServers.length > 0 ? { mcpServers } : {}),
+        },
         abortSignal
       );
       const parsed = sessionOpenResponseSchema.parse(raw);
@@ -288,13 +441,17 @@ export async function* streamAgyMultiTurn(
       throw error;
     }
   } else {
+    const antigravityMeta: Record<string, unknown> = {
+      ...(systemAppend ? { systemPrompt: { append: systemAppend } } : {}),
+      ...(skillPaths.length > 0 ? { skills: skillPaths } : {}),
+    };
     const raw = await client.request(
       'session/new',
       {
         cwd,
-        mcpServers: [],
-        ...(systemAppend
-          ? { _meta: { antigravity: { systemPrompt: { append: systemAppend } } } }
+        mcpServers,
+        ...(Object.keys(antigravityMeta).length > 0
+          ? { _meta: { antigravity: antigravityMeta } }
           : {}),
       },
       abortSignal

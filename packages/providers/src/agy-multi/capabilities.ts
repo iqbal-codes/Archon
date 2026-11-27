@@ -5,18 +5,21 @@ import type { ProviderCapabilities } from '../types';
  *
  * Capabilities reflect only behavior wired and enforced over `agy-multi acp`:
  * - `sessionResume` & `sessionFork` use ACP `session/resume` and `session/fork`.
+ * - `mcp` loads `nodeConfig.mcp` via `loadMcpConfig` and maps it to ACP `session/new.mcpServers`,
+ *   while `agy-multi acp --clean` isolates ambient user MCP configs via `--gemini-dir`.
+ * - `skills` resolves `nodeConfig.skills` via `@archon/paths/skills` and passes them to
+ *   `agy-multi acp` via `session/new._meta.antigravity.skills` (with `--clean` suppressing
+ *   ambient user skills; upstream `agy acp` still discovers `<cwd>/.agents/skills` when present).
  * - `effortControl` maps Archon's effort ladder onto ACP `thought_level`.
  * - `structuredOutput` uses best-effort prompt augmentation + JSON repair/validation.
- * - `mcp` and `skills` remain false until `agy acp` exposes strict per-node isolation
- *   for user MCP servers and named skill directories.
  */
 export const AGY_MULTI_CAPABILITIES: ProviderCapabilities = {
   backgroundWork: 'unobserved',
   sessionResume: true,
   sessionFork: true,
-  mcp: false,
+  mcp: true,
   hooks: false,
-  skills: false,
+  skills: true,
   plugins: false,
   agents: false,
   toolRestrictions: false,
