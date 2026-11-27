@@ -434,7 +434,7 @@ Commands:
   ai logout <provider>       Disconnect an AI provider key
   ai tier set <t> <p> <m>    Set a model tier (small/medium/large) → provider/model [--effort <e>] [--scope user|install]
   ai tier list [--json]      Show configured tiers (install + yours) vs built-in defaults
-  ai tier unset <tier>       Unset a tier override (built-ins: claude/codex only) [--scope user|install]
+  ai tier unset <tier>       Unset a tier override (built-ins: claude/codex/agy-multi) [--scope user|install]
   ai alias set <@n> <p> <m>  Set a @custom model alias [--effort <e>] [--scope user|install]
   ai alias list [--json]     Show configured @custom aliases (install + yours)
   ai alias unset <@name>     Remove a @custom alias [--scope user|install]
